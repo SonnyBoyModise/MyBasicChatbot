@@ -1,0 +1,46 @@
+# ============================================================
+# .github/workflows/dotnet-ci.yml
+# GitHub Actions Continuous Integration workflow for
+# MyBasicChatbot — a .NET 8 Windows console application.
+#
+# Triggers on every push and pull request to 'main'.
+# Runs on a Windows runner because System.Media.SoundPlayer
+# requires the net8.0-windows target framework.
+# ============================================================
+
+name: .NET CI Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    # Windows runner is required for net8.0-windows / SoundPlayer support
+    runs-on: windows-latest
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Install the .NET 8 SDK on the runner
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Step 3: Restore NuGet packages / dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Step 4: Build the project in Release mode
+      # --no-restore skips restore since Step 3 already did it
+      - name: Build project
+        run: dotnet build --no-restore --configuration Release
+
+      # Step 5: Confirm successful build (visible in Actions log)
+      - name: Confirm build success
+        run: echo "Build completed successfully — MyBasicChatbot is ready!"
