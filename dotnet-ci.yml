@@ -1,0 +1,36 @@
+# ============================================================
+# .github/workflows/dotnet-ci.yml
+# GitHub Actions CI for MyBasicChatbot Part 2 (WPF).
+# Runs on every push/PR to main.
+# Uses windows-latest because WPF requires net8.0-windows.
+# ============================================================
+
+name: .NET CI Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build project (Release)
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Confirm build success
+        run: echo "MyBasicChatbot Part 2 (WPF) built successfully!"
