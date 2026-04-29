@@ -1,14 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Target Windows specifically so System.Media.SoundPlayer is available -->
-    <OutputType>Exe</OutputType>
+    <!-- WPF application targeting Windows (required for SoundPlayer and WPF) -->
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
     <RootNamespace>MyBasicChatbot</RootNamespace>
     <AssemblyName>MyBasicChatbot</AssemblyName>
+    <ApplicationIcon>shield.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!-- Copy the WAV audio file to the output directory on every build -->
