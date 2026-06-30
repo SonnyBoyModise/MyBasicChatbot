@@ -1,238 +1,236 @@
-<!-- ============================================================
-     MainWindow.xaml
-     Main GUI window for the Cybersecurity Awareness Chatbot.
-     Layout:
-       - Left panel  : ASCII logo, user info card, memory panel
-       - Right panel : Chat history (ScrollViewer), input bar, send button
-     Dark cybersecurity theme with cyan accents.
-     ============================================================ -->
+<!-- MainWindow.xaml — Full Part 3 GUI: Chat, Tasks, and Quiz panels -->
 <Window x:Class="MyBasicChatbot.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="🔐 Cybersecurity Awareness Bot — South Africa"
-        Height="720" Width="1100"
-        MinHeight="600" MinWidth="900"
+        Title="Cybersecurity Awareness Bot - South Africa"
+        Height="740" Width="1150" MinHeight="650" MinWidth="950"
         WindowStartupLocation="CenterScreen"
         Background="#0D1117">
 
     <Window.Resources>
-        <!-- Scroll bar style — thin dark scrollbar -->
+
+        <!-- Thin scrollbar -->
         <Style TargetType="ScrollBar">
-            <Setter Property="Width"      Value="6"/>
+            <Setter Property="Width" Value="6"/>
             <Setter Property="Background" Value="#161B22"/>
         </Style>
+
+        <!-- Nav button (inactive) -->
+        <Style x:Key="NavBtn" TargetType="Button">
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="Foreground"      Value="#8B949E"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="FontWeight"      Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="BorderBrush"     Value="Transparent"/>
+            <Setter Property="Padding"         Value="20,0"/>
+            <Setter Property="Height"          Value="50"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Nav button (active - cyan underline) -->
+        <Style x:Key="NavBtnActive" TargetType="Button" BasedOn="{StaticResource NavBtn}">
+            <Setter Property="Foreground"  Value="#00D4FF"/>
+            <Setter Property="BorderBrush" Value="#00D4FF"/>
+        </Style>
+
+        <!-- Primary cyan button -->
+        <Style x:Key="PrimaryBtn" TargetType="Button">
+            <Setter Property="Background"      Value="#00D4FF"/>
+            <Setter Property="Foreground"      Value="#0D1117"/>
+            <Setter Property="FontWeight"      Value="Bold"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Padding"         Value="18,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#33DDFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Green button -->
+        <Style x:Key="GreenBtn" TargetType="Button" BasedOn="{StaticResource PrimaryBtn}">
+            <Setter Property="Background" Value="#3FB950"/>
+            <Setter Property="Foreground" Value="#0D1117"/>
+            <Setter Property="Padding"    Value="10,6"/>
+            <Setter Property="FontSize"   Value="12"/>
+        </Style>
+
+        <!-- Red button -->
+        <Style x:Key="RedBtn" TargetType="Button" BasedOn="{StaticResource PrimaryBtn}">
+            <Setter Property="Background" Value="#F85149"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding"    Value="10,6"/>
+            <Setter Property="FontSize"   Value="12"/>
+        </Style>
+
+        <!-- Dark text input -->
+        <Style x:Key="DarkInput" TargetType="TextBox">
+            <Setter Property="Background"               Value="#21262D"/>
+            <Setter Property="Foreground"               Value="#E6EDF3"/>
+            <Setter Property="CaretBrush"               Value="#00D4FF"/>
+            <Setter Property="BorderBrush"              Value="#30363D"/>
+            <Setter Property="BorderThickness"          Value="1"/>
+            <Setter Property="Padding"                  Value="10,8"/>
+            <Setter Property="FontSize"                 Value="13"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#00D4FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Quiz answer button -->
+        <Style x:Key="AnswerBtn" TargetType="Button">
+            <Setter Property="Background"      Value="#21262D"/>
+            <Setter Property="Foreground"      Value="#E6EDF3"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="Padding"         Value="14,12"/>
+            <Setter Property="BorderBrush"     Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Margin"          Value="0,4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background"  Value="#2D333B"/>
+                                <Setter Property="BorderBrush" Value="#00D4FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
-    <!-- ── Root Grid: two columns (left panel + right chat) ── -->
+    <!-- 2-column root grid -->
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="290"/>
+            <ColumnDefinition Width="278"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ════════════════════════════════════════════════════
-             LEFT PANEL — Logo, user info, memory, quick tips
-             ════════════════════════════════════════════════════ -->
-        <Border Grid.Column="0"
-                Background="#161B22"
-                BorderBrush="#30363D"
-                BorderThickness="0,0,1,0">
+        <!-- LEFT SIDEBAR -->
+        <Border Grid.Column="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,1,0">
+            <DockPanel>
 
-            <DockPanel Margin="0">
-
-                <!-- Logo / Header -->
-                <Border DockPanel.Dock="Top"
-                        Background="#0D1117"
-                        Padding="16,18,16,14"
-                        BorderBrush="#30363D"
-                        BorderThickness="0,0,0,1">
+                <!-- ASCII Logo -->
+                <Border DockPanel.Dock="Top" Background="#0D1117" Padding="12,14" BorderBrush="#30363D" BorderThickness="0,0,0,1">
                     <StackPanel>
-                        <!-- ASCII-style logo rendered as styled text -->
-                        <TextBlock Text="██████╗██╗   ██╗██████╗ "
-                                   FontFamily="Consolas"
-                                   FontSize="7"
-                                   Foreground="#00D4FF"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="██╔════╝╚██╗██╔╝██╔══██╗"
-                                   FontFamily="Consolas"
-                                   FontSize="7"
-                                   Foreground="#00D4FF"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="██║      ╚███╔╝ ██████╔╝"
-                                   FontFamily="Consolas"
-                                   FontSize="7"
-                                   Foreground="#00D4FF"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="██║      ██╔██╗ ██╔══██╗"
-                                   FontFamily="Consolas"
-                                   FontSize="7"
-                                   Foreground="#00AACC"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="╚██████╗██╔╝╚██╗██████╔╝"
-                                   FontFamily="Consolas"
-                                   FontSize="7"
-                                   Foreground="#00AACC"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="╚═════╝╚═╝  ╚═╝╚═════╝ "
-                                   FontFamily="Consolas"
-                                   FontSize="7"
-                                   Foreground="#008899"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="🔐 CYBER AWARENESS BOT"
-                                   FontSize="11"
-                                   FontWeight="Bold"
-                                   Foreground="#00D4FF"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,8,0,2"/>
-                        <TextBlock Text="South Africa"
-                                   FontSize="10"
-                                   Foreground="#8B949E"
-                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="██████╗██╗   ██╗██████╗"  FontFamily="Consolas" FontSize="7" Foreground="#00D4FF" HorizontalAlignment="Center"/>
+                        <TextBlock Text="██╔════╝╚██╗██╔╝██╔══██╗" FontFamily="Consolas" FontSize="7" Foreground="#00D4FF" HorizontalAlignment="Center"/>
+                        <TextBlock Text="██║      ╚███╔╝ ██████╔╝" FontFamily="Consolas" FontSize="7" Foreground="#00D4FF" HorizontalAlignment="Center"/>
+                        <TextBlock Text="██║      ██╔██╗ ██╔══██╗" FontFamily="Consolas" FontSize="7" Foreground="#00AACC" HorizontalAlignment="Center"/>
+                        <TextBlock Text="╚██████╗██╔╝╚██╗██████╔╝" FontFamily="Consolas" FontSize="7" Foreground="#00AACC" HorizontalAlignment="Center"/>
+                        <TextBlock Text="╚═════╝╚═╝  ╚═╝╚═════╝"  FontFamily="Consolas" FontSize="7" Foreground="#008899" HorizontalAlignment="Center"/>
+                        <TextBlock Text="CYBER AWARENESS BOT" FontSize="11" FontWeight="Bold" Foreground="#00D4FF" HorizontalAlignment="Center" Margin="0,7,0,2"/>
+                        <TextBlock Text="South Africa"       FontSize="10" Foreground="#8B949E" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
-                <!-- Quick Topic Buttons -->
-                <Border DockPanel.Dock="Bottom"
-                        Padding="14,12"
-                        BorderBrush="#30363D"
-                        BorderThickness="0,1,0,0">
+                <!-- Quick topic buttons -->
+                <Border DockPanel.Dock="Bottom" Padding="12,10" BorderBrush="#30363D" BorderThickness="0,1,0,0">
                     <StackPanel>
-                        <TextBlock Text="QUICK TOPICS"
-                                   FontSize="10"
-                                   FontWeight="Bold"
-                                   Foreground="#8B949E"
-                                   Margin="0,0,0,8"
-                                   FontFamily="Consolas"/>
+                        <TextBlock Text="QUICK TOPICS" FontSize="10" FontWeight="Bold" Foreground="#8B949E" FontFamily="Consolas" Margin="0,0,0,7"/>
                         <WrapPanel>
-                            <Button Content="Phishing"    Tag="phishing"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Margin="0,3,4,3" Padding="10,6"
-                                    FontSize="11"
-                                    Click="QuickTopic_Click"/>
-                            <Button Content="Passwords"   Tag="password"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Background="#3FB950"
-                                    Margin="0,3,4,3" Padding="10,6"
-                                    FontSize="11"
-                                    Click="QuickTopic_Click"/>
-                            <Button Content="Malware"     Tag="malware"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Background="#F0C543" Foreground="#0D1117"
-                                    Margin="0,3,4,3" Padding="10,6"
-                                    FontSize="11"
-                                    Click="QuickTopic_Click"/>
-                            <Button Content="Scams"       Tag="scam"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Background="#F85149"
-                                    Margin="0,3,4,3" Padding="10,6"
-                                    FontSize="11"
-                                    Click="QuickTopic_Click"/>
-                            <Button Content="Safe Browsing" Tag="safe browsing"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Background="#8957E5"
-                                    Margin="0,3,4,3" Padding="10,6"
-                                    FontSize="11"
-                                    Click="QuickTopic_Click"/>
-                            <Button Content="SA Law"      Tag="cyber law"
-                                    Style="{StaticResource PrimaryButton}"
-                                    Background="#388BFD"
-                                    Margin="0,3,4,3" Padding="10,6"
-                                    FontSize="11"
-                                    Click="QuickTopic_Click"/>
+                            <Button Content="Phishing"  Tag="phishing"      Style="{StaticResource PrimaryBtn}" Margin="0,2,3,2" Padding="7,5" FontSize="11" Click="QuickTopic_Click"/>
+                            <Button Content="Passwords" Tag="password"      Style="{StaticResource PrimaryBtn}" Background="#3FB950" Margin="0,2,3,2" Padding="7,5" FontSize="11" Click="QuickTopic_Click"/>
+                            <Button Content="Malware"   Tag="malware"       Style="{StaticResource PrimaryBtn}" Background="#F0C543" Foreground="#0D1117" Margin="0,2,3,2" Padding="7,5" FontSize="11" Click="QuickTopic_Click"/>
+                            <Button Content="Scams"     Tag="scam"          Style="{StaticResource PrimaryBtn}" Background="#F85149" Margin="0,2,3,2" Padding="7,5" FontSize="11" Click="QuickTopic_Click"/>
+                            <Button Content="Browsing"  Tag="safe browsing" Style="{StaticResource PrimaryBtn}" Background="#8957E5" Margin="0,2,3,2" Padding="7,5" FontSize="11" Click="QuickTopic_Click"/>
+                            <Button Content="SA Law"    Tag="cyber law"     Style="{StaticResource PrimaryBtn}" Background="#388BFD" Margin="0,2,3,2" Padding="7,5" FontSize="11" Click="QuickTopic_Click"/>
                         </WrapPanel>
                     </StackPanel>
                 </Border>
 
-                <!-- User Info + Memory Panel (fills remaining space) -->
+                <!-- Info cards -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="14,14,14,0">
+                    <StackPanel Margin="11,11">
 
-                        <!-- User Info Card -->
-                        <Border Background="#21262D"
-                                CornerRadius="8"
-                                Padding="14,12"
-                                Margin="0,0,0,14"
-                                BorderBrush="#30363D"
-                                BorderThickness="1">
+                        <!-- User card -->
+                        <Border Background="#21262D" CornerRadius="8" Padding="11,9" Margin="0,0,0,9" BorderBrush="#30363D" BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="👤 USER"
-                                           FontSize="10"
-                                           FontWeight="Bold"
-                                           Foreground="#8B949E"
-                                           FontFamily="Consolas"
-                                           Margin="0,0,0,8"/>
-                                <TextBlock x:Name="UserNameLabel"
-                                           Text="Not set"
-                                           FontSize="15"
-                                           FontWeight="Bold"
-                                           Foreground="#E6EDF3"/>
-                                <TextBlock x:Name="SentimentLabel"
-                                           Text="😊 Mood: Neutral"
-                                           FontSize="11"
-                                           Foreground="#8B949E"
-                                           Margin="0,4,0,0"/>
-                                <TextBlock x:Name="MessageCountLabel"
-                                           Text="Messages: 0"
-                                           FontSize="11"
-                                           Foreground="#8B949E"
-                                           Margin="0,2,0,0"/>
+                                <TextBlock Text="USER" FontSize="10" FontWeight="Bold" Foreground="#8B949E" FontFamily="Consolas" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="UserNameLabel"     Text="Not set"       FontSize="14" FontWeight="Bold" Foreground="#E6EDF3"/>
+                                <TextBlock x:Name="SentimentLabel"    Text="Mood: Neutral" FontSize="11" Foreground="#8B949E" Margin="0,3,0,0"/>
+                                <TextBlock x:Name="MessageCountLabel" Text="Messages: 0"   FontSize="11" Foreground="#8B949E" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- Memory Panel -->
-                        <Border Background="#21262D"
-                                CornerRadius="8"
-                                Padding="14,12"
-                                Margin="0,0,0,14"
-                                BorderBrush="#30363D"
-                                BorderThickness="1">
+                        <!-- Memory card -->
+                        <Border Background="#21262D" CornerRadius="8" Padding="11,9" Margin="0,0,0,9" BorderBrush="#30363D" BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="🧠 MEMORY"
-                                           FontSize="10"
-                                           FontWeight="Bold"
-                                           Foreground="#8B949E"
-                                           FontFamily="Consolas"
-                                           Margin="0,0,0,8"/>
-                                <TextBlock x:Name="MemoryInterestLabel"
-                                           Text="Interest: —"
-                                           FontSize="11"
-                                           Foreground="#E6EDF3"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock x:Name="MemoryLastTopicLabel"
-                                           Text="Last topic: —"
-                                           FontSize="11"
-                                           Foreground="#E6EDF3"
-                                           Margin="0,4,0,0"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock x:Name="MemoryConcernLabel"
-                                           Text="Concern: —"
-                                           FontSize="11"
-                                           Foreground="#E6EDF3"
-                                           Margin="0,4,0,0"
-                                           TextWrapping="Wrap"/>
+                                <TextBlock Text="MEMORY" FontSize="10" FontWeight="Bold" Foreground="#8B949E" FontFamily="Consolas" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="MemoryInterestLabel"  Text="Interest: —"   FontSize="11" Foreground="#E6EDF3" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="MemoryLastTopicLabel" Text="Last topic: —" FontSize="11" Foreground="#E6EDF3" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="MemoryConcernLabel"   Text="Concern: —"   FontSize="11" Foreground="#E6EDF3" Margin="0,3,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- Status / Tip Box -->
-                        <Border x:Name="TipBox"
-                                Background="#162032"
-                                CornerRadius="8"
-                                Padding="14,12"
-                                BorderBrush="#00D4FF"
-                                BorderThickness="1">
+                        <!-- Database status card -->
+                        <Border Background="#21262D" CornerRadius="8" Padding="11,9" Margin="0,0,0,9" BorderBrush="#30363D" BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="💡 DID YOU KNOW?"
-                                           FontSize="10"
-                                           FontWeight="Bold"
-                                           Foreground="#00D4FF"
-                                           FontFamily="Consolas"
-                                           Margin="0,0,0,6"/>
+                                <TextBlock Text="DATABASE" FontSize="10" FontWeight="Bold" Foreground="#8B949E" FontFamily="Consolas" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="DbStatusLabel" Text="Checking..." FontSize="11" Foreground="#F0C543" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Did you know tip -->
+                        <Border Background="#162032" CornerRadius="8" Padding="11,9" BorderBrush="#00D4FF" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="DID YOU KNOW?" FontSize="10" FontWeight="Bold" Foreground="#00D4FF" FontFamily="Consolas" Margin="0,0,0,5"/>
                                 <TextBlock x:Name="TipLabel"
                                            Text="South Africa ranks among the top targeted countries for cybercrime in Africa."
-                                           FontSize="11"
-                                           Foreground="#8B949E"
-                                           TextWrapping="Wrap"
-                                           LineHeight="18"/>
+                                           FontSize="11" Foreground="#8B949E" TextWrapping="Wrap" LineHeight="17"/>
                             </StackPanel>
                         </Border>
 
@@ -242,150 +240,169 @@
             </DockPanel>
         </Border>
 
-        <!-- ════════════════════════════════════════════════════
-             RIGHT PANEL — Name entry OR chat interface
-             ════════════════════════════════════════════════════ -->
+        <!-- RIGHT MAIN AREA -->
         <Grid Grid.Column="1">
 
-            <!-- ── Name Entry Screen (shown first) ── -->
-            <Border x:Name="NameEntryPanel"
-                    Background="#0D1117"
-                    Visibility="Visible">
-                <StackPanel VerticalAlignment="Center"
-                            HorizontalAlignment="Center"
-                            Width="420">
-
-                    <TextBlock Text="🔐"
-                               FontSize="52"
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,16"/>
-
-                    <TextBlock Text="Welcome to the"
-                               FontSize="16"
-                               Foreground="#8B949E"
-                               HorizontalAlignment="Center"/>
-
-                    <TextBlock Text="Cybersecurity Awareness Bot"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="#00D4FF"
-                               HorizontalAlignment="Center"
-                               TextAlignment="Center"
-                               Margin="0,4,0,4"/>
-
-                    <TextBlock Text="Helping South African citizens stay safe online."
-                               FontSize="13"
-                               Foreground="#8B949E"
-                               HorizontalAlignment="Center"
-                               TextAlignment="Center"
-                               Margin="0,0,0,32"/>
-
-                    <TextBlock Text="What is your name?"
-                               FontSize="15"
-                               Foreground="#E6EDF3"
-                               FontWeight="SemiBold"
-                               Margin="0,0,0,10"/>
-
-                    <TextBox x:Name="NameInputBox"
-                             Style="{StaticResource ChatInput}"
-                             FontSize="16"
-                             Height="46"
-                             Margin="0,0,0,8"
-                             KeyDown="NameInput_KeyDown"/>
-
-                    <!-- Validation error message -->
-                    <TextBlock x:Name="NameErrorLabel"
-                               Text=""
-                               Foreground="#F85149"
-                               FontSize="12"
-                               Margin="0,0,0,12"
-                               Visibility="Collapsed"/>
-
-                    <Button Content="Start Chatting  →"
-                            Style="{StaticResource PrimaryButton}"
-                            Height="46"
-                            FontSize="15"
-                            Click="StartChat_Click"/>
-
+            <!-- Name entry screen -->
+            <Border x:Name="NameEntryPanel" Background="#0D1117" Visibility="Visible">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="400">
+                    <TextBlock Text="🔐" FontSize="52" HorizontalAlignment="Center" Margin="0,0,0,14"/>
+                    <TextBlock Text="Cybersecurity Awareness Bot" FontSize="22" FontWeight="Bold" Foreground="#00D4FF" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,6"/>
+                    <TextBlock Text="Helping South African citizens stay safe online." FontSize="13" Foreground="#8B949E" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,28"/>
+                    <TextBlock Text="What is your name?" FontSize="14" Foreground="#E6EDF3" FontWeight="SemiBold" Margin="0,0,0,7"/>
+                    <TextBox x:Name="NameInputBox" Style="{StaticResource DarkInput}" Height="44" FontSize="15" Margin="0,0,0,6" KeyDown="NameInput_KeyDown"/>
+                    <TextBlock x:Name="NameErrorLabel" Text="" Foreground="#F85149" FontSize="12" Margin="0,0,0,10" Visibility="Collapsed"/>
+                    <Button Content="Start Chatting  →" Style="{StaticResource PrimaryBtn}" Height="44" FontSize="15" Click="StartChat_Click"/>
                 </StackPanel>
             </Border>
 
-            <!-- ── Chat Interface (hidden until name is entered) ── -->
-            <Grid x:Name="ChatPanel" Visibility="Collapsed">
+            <!-- Main content area (shown after name entry) -->
+            <Grid x:Name="MainContentArea" Visibility="Collapsed">
                 <Grid.RowDefinitions>
-                    <!-- Chat header -->
-                    <RowDefinition Height="56"/>
-                    <!-- Chat messages -->
+                    <RowDefinition Height="50"/>
                     <RowDefinition Height="*"/>
-                    <!-- Input area -->
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Chat Header Bar -->
-                <Border Grid.Row="0"
-                        Background="#161B22"
-                        BorderBrush="#30363D"
-                        BorderThickness="0,0,0,1"
-                        Padding="16,0">
-                    <DockPanel VerticalAlignment="Center">
-                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                            <Ellipse Width="10" Height="10"
-                                     Fill="#3FB950"
-                                     Margin="0,0,8,0"
-                                     VerticalAlignment="Center"/>
-                            <TextBlock x:Name="ChatHeaderLabel"
-                                       Text="Chat — "
-                                       FontSize="14"
-                                       FontWeight="Bold"
-                                       Foreground="#E6EDF3"
-                                       VerticalAlignment="Center"/>
+                <!-- Navigation bar -->
+                <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1">
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnNavChat"  Content="💬  Chat"  Style="{StaticResource NavBtnActive}" Click="NavChat_Click"/>
+                        <Button x:Name="BtnNavTasks" Content="📋  Tasks" Style="{StaticResource NavBtn}"       Click="NavTasks_Click"/>
+                        <Button x:Name="BtnNavQuiz"  Content="🎮  Quiz"  Style="{StaticResource NavBtn}"       Click="NavQuiz_Click"/>
+                        <TextBlock x:Name="ChatHeaderLabel" Text="" VerticalAlignment="Center" Foreground="#8B949E" FontSize="12" Margin="16,0,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- CHAT PANEL -->
+                <Grid Grid.Row="1" x:Name="ChatPanel" Visibility="Visible">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <ScrollViewer Grid.Row="0" x:Name="ChatScrollViewer" VerticalScrollBarVisibility="Auto" Padding="16,12">
+                        <StackPanel x:Name="ChatMessagesPanel" Margin="0,0,8,0"/>
+                    </ScrollViewer>
+                    <Border Grid.Row="1" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,1,0,0" Padding="14,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" x:Name="MessageInputBox" Style="{StaticResource DarkInput}" Height="42" Margin="0,0,10,0" KeyDown="MessageInput_KeyDown" FontSize="14"/>
+                            <Button  Grid.Column="1" Content="Send ➤" Style="{StaticResource PrimaryBtn}" Height="42" Width="88" Click="SendMessage_Click"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- TASKS PANEL -->
+                <Grid Grid.Row="1" x:Name="TasksPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Add task form -->
+                    <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="20,16">
+                        <StackPanel>
+                            <TextBlock Text="📋  ADD NEW CYBERSECURITY TASK" FontSize="13" FontWeight="Bold" Foreground="#00D4FF" FontFamily="Consolas" Margin="0,0,0,12"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                    <TextBlock Text="Task Title *" FontSize="11" Foreground="#8B949E" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TaskTitleBox" Style="{StaticResource DarkInput}" Height="38"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                                    <TextBlock Text="Description (optional)" FontSize="11" Foreground="#8B949E" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="TaskDescBox" Style="{StaticResource DarkInput}" Height="38"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                                    <TextBlock Text="Reminder Date (optional)" FontSize="11" Foreground="#8B949E" Margin="0,0,0,4"/>
+                                    <DatePicker x:Name="TaskDatePicker" Height="38"
+                                                Background="#21262D" Foreground="#E6EDF3"
+                                                BorderBrush="#30363D" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" VerticalAlignment="Bottom">
+                                    <Button Content="+ Add Task" Style="{StaticResource PrimaryBtn}" Height="38" Click="AddTask_Click"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock x:Name="TaskErrorLabel"   Text="" Foreground="#F85149" FontSize="12" Margin="0,7,0,0" Visibility="Collapsed"/>
+                            <TextBlock x:Name="TaskSuccessLabel" Text="" Foreground="#3FB950" FontSize="12" Margin="0,7,0,0" Visibility="Collapsed"/>
                         </StackPanel>
-                        <TextBlock DockPanel.Dock="Right"
-                                   Text="🔒 Secure Session"
-                                   FontSize="11"
-                                   Foreground="#8B949E"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Right"/>
-                    </DockPanel>
-                </Border>
+                    </Border>
 
-                <!-- Chat Messages ScrollViewer -->
-                <ScrollViewer Grid.Row="1"
-                              x:Name="ChatScrollViewer"
-                              VerticalScrollBarVisibility="Auto"
-                              Padding="16,12">
-                    <StackPanel x:Name="ChatMessagesPanel"
-                                Margin="0,0,8,0"/>
-                </ScrollViewer>
-
-                <!-- Input Area -->
-                <Border Grid.Row="2"
-                        Background="#161B22"
-                        BorderBrush="#30363D"
-                        BorderThickness="0,1,0,0"
-                        Padding="16,12">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <TextBox Grid.Column="0"
-                                 x:Name="MessageInputBox"
-                                 Style="{StaticResource ChatInput}"
-                                 Height="44"
-                                 Margin="0,0,10,0"
-                                 KeyDown="MessageInput_KeyDown"
-                                 FontSize="14"/>
-
-                        <Button Grid.Column="1"
-                                Content="Send  ➤"
-                                Style="{StaticResource PrimaryButton}"
-                                Height="44"
-                                Width="100"
-                                Click="SendMessage_Click"/>
+                    <!-- Task list -->
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="38"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Padding="20,0" Background="#0D1117">
+                            <TextBlock Text="YOUR TASKS" FontSize="11" FontWeight="Bold" Foreground="#8B949E" FontFamily="Consolas" VerticalAlignment="Center"/>
+                        </Border>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,8">
+                            <StackPanel x:Name="TaskListPanel"/>
+                        </ScrollViewer>
                     </Grid>
-                </Border>
+                </Grid>
+
+                <!-- QUIZ PANEL -->
+                <Grid Grid.Row="1" x:Name="QuizPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Quiz header -->
+                    <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="24,14">
+                        <DockPanel>
+                            <TextBlock Text="🎮  CYBERSECURITY QUIZ" FontSize="14" FontWeight="Bold" Foreground="#F0C543" FontFamily="Consolas" VerticalAlignment="Center"/>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <TextBlock x:Name="QuizProgressLabel" Text="" FontSize="12" Foreground="#8B949E" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                                <TextBlock x:Name="QuizScoreLabel"    Text="" FontSize="13" FontWeight="Bold" Foreground="#3FB950" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Quiz start screen -->
+                    <StackPanel Grid.Row="1" x:Name="QuizStartPanel" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock Text="🛡️" FontSize="56" HorizontalAlignment="Center" Margin="0,0,0,14"/>
+                        <TextBlock Text="Test your cybersecurity knowledge!" FontSize="18" FontWeight="Bold" Foreground="#E6EDF3" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                        <TextBlock Text="12 questions  •  Multiple choice + True/False" FontSize="13" Foreground="#8B949E" HorizontalAlignment="Center" Margin="0,0,0,28"/>
+                        <Button Content="  Start Quiz  " Style="{StaticResource PrimaryBtn}" HorizontalAlignment="Center" FontSize="15" Height="46" Click="StartQuiz_Click"/>
+                    </StackPanel>
+
+                    <!-- Quiz question area (hidden until quiz starts) -->
+                    <ScrollViewer Grid.Row="1" x:Name="QuizQuestionPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="40,24">
+                        <StackPanel>
+                            <TextBlock x:Name="QuizQuestionText" FontSize="17" FontWeight="SemiBold" Foreground="#E6EDF3" TextWrapping="Wrap" LineHeight="26" Margin="0,0,0,22"/>
+                            <StackPanel x:Name="AnswerButtonsPanel"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Quiz result screen -->
+                    <StackPanel Grid.Row="1" x:Name="QuizResultPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock x:Name="QuizResultEmoji"   Text="🏆" FontSize="56" HorizontalAlignment="Center" Margin="0,0,0,14"/>
+                        <TextBlock x:Name="QuizResultMessage" Text="" FontSize="18" FontWeight="Bold" Foreground="#E6EDF3" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="400" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="QuizFinalScore"    Text="" FontSize="13" Foreground="#8B949E" HorizontalAlignment="Center" Margin="0,0,0,28"/>
+                        <Button Content="Play Again" Style="{StaticResource PrimaryBtn}" HorizontalAlignment="Center" Height="42" Click="RestartQuiz_Click"/>
+                    </StackPanel>
+
+                    <!-- Feedback bar (shown after each answer) -->
+                    <Border Grid.Row="2" x:Name="FeedbackBar" Visibility="Collapsed"
+                            Background="#162032" BorderBrush="#00D4FF" BorderThickness="0,1,0,0" Padding="24,12">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Next Question →" Style="{StaticResource PrimaryBtn}" HorizontalAlignment="Right" Height="38" Click="NextQuestion_Click"/>
+                            <TextBlock x:Name="FeedbackText" Text="" FontSize="13" Foreground="#E6EDF3" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        </DockPanel>
+                    </Border>
+
+                </Grid>
 
             </Grid>
         </Grid>
