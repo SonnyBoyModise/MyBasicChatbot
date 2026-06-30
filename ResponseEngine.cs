@@ -1,467 +1,170 @@
-// ============================================================
-// Helpers/ResponseEngine.cs
-// The brain of the chatbot. Handles:
-//   - Keyword recognition for cybersecurity topics
-//   - Random response selection from lists (using List<string>)
-//   - Follow-up / "tell me more" conversation flow
-//   - Memory-aware personalised responses
-//   - Delegate for response post-processing
-// ============================================================
+// ResponseEngine.cs — keyword recognition and random responses (Parts 1, 2 & 3)
 
 namespace MyBasicChatbot.Helpers
 {
-    // ── Delegate for response post-processing ───────────────────────
-    // Allows any method matching this signature to be plugged in to
-    // transform a response string (e.g. add memory prefix, sentiment prefix)
     public delegate string ResponseProcessor(string response);
 
     public class ResponseEngine
     {
-        // ── Random instance for selecting random responses ───────────
         private readonly Random _random = new();
-
-        // ── Reference to memory so responses can be personalised ─────
         private readonly MemoryStore _memory;
 
-        // Constructor — injects the shared MemoryStore
-        public ResponseEngine(MemoryStore memory)
-        {
-            _memory = memory;
-        }
-
-        // ============================================================
-        // RANDOM RESPONSE LISTS (List<string> generic collections)
-        // Each list holds multiple responses for the same topic so
-        // the bot doesn't always say the exact same thing.
-        // ============================================================
+        public ResponseEngine(MemoryStore memory) { _memory = memory; }
 
         private readonly List<string> _phishingTips = new()
         {
-            "🎣 Phishing Tip: Be cautious of emails asking for personal information. " +
-            "Scammers often disguise themselves as trusted organisations like your bank or SARS.",
-
-            "🎣 Phishing Tip: Check the sender's email address carefully. " +
-            "Attackers use addresses like 'support@fnb-secure.co' instead of 'fnb.co.za'.",
-
-            "🎣 Phishing Tip: Hover over links before clicking — the real URL shows " +
-            "at the bottom of your browser. If it looks suspicious, don't click.",
-
-            "🎣 Phishing Tip: Legitimate companies will NEVER ask for your password " +
-            "or PIN via email or SMS. If they do, it's a scam.",
-
-            "🎣 Phishing Tip: Watch out for urgency in emails — " +
-            "'Your account will be closed in 24 hours!' is a classic pressure tactic."
+            "Phishing Tip: Be cautious of emails asking for personal info. Scammers disguise themselves as banks or SARS.",
+            "Phishing Tip: Check the sender's address carefully — attackers use 'fnb-secure.co' instead of 'fnb.co.za'.",
+            "Phishing Tip: Hover over links before clicking to see the real URL at the bottom of your browser.",
+            "Phishing Tip: Legitimate companies will NEVER ask for your password via email or SMS.",
+            "Phishing Tip: Urgency like 'Your account closes in 24 hours!' is a classic pressure tactic."
         };
 
         private readonly List<string> _passwordTips = new()
         {
-            "🔑 Password Tip: Use at least 12 characters mixing uppercase, lowercase, " +
-            "numbers and symbols. Example: M@ngoes#River$2025!",
-
-            "🔑 Password Tip: Never reuse the same password across different websites. " +
-            "If one site is hacked, all your accounts stay safe.",
-
-            "🔑 Password Tip: Use a password manager like Bitwarden (free!) to generate " +
-            "and store strong, unique passwords for every site.",
-
-            "🔑 Password Tip: Enable Two-Factor Authentication (2FA) on your email and " +
-            "banking apps. Even if your password is stolen, hackers can't get in.",
-
-            "🔑 Password Tip: Check if your email has been in a data breach at " +
-            "haveibeenpwned.com — it's free and safe to use."
+            "Password Tip: Use at least 12 characters mixing uppercase, lowercase, numbers, and symbols.",
+            "Password Tip: Never reuse the same password across different websites.",
+            "Password Tip: Use a free password manager like Bitwarden to generate strong passwords.",
+            "Password Tip: Enable Two-Factor Authentication (2FA) on your email and banking apps.",
+            "Password Tip: Check if your email was in a breach at haveibeenpwned.com."
         };
 
         private readonly List<string> _malwareTips = new()
         {
-            "🦠 Malware Tip: Keep Windows and all your software updated. " +
-            "Most malware exploits known vulnerabilities in outdated software.",
-
-            "🦠 Malware Tip: Never download software from unofficial websites. " +
-            "Pirated software is one of the most common ways malware spreads in SA.",
-
-            "🦠 Malware Tip: Don't plug in unknown USB drives — " +
-            "attackers deliberately leave infected USBs in public places.",
-
-            "🦠 Malware Tip: Windows Defender (built into Windows) is actually very effective. " +
-            "Make sure it's enabled and up to date.",
-
-            "🦠 Malware Tip: Back up your important files regularly to an external drive " +
-            "or cloud storage. This is your best defence against ransomware."
+            "Malware Tip: Keep Windows and all software updated — most malware exploits outdated software.",
+            "Malware Tip: Never download software from unofficial websites.",
+            "Malware Tip: Do not plug in unknown USB drives — attackers leave infected ones in public places.",
+            "Malware Tip: Windows Defender is built-in and effective — keep it enabled and updated.",
+            "Malware Tip: Back up important files regularly — your best defence against ransomware."
         };
 
-        private readonly List<string> _safeBrowsingTips = new()
+        private readonly List<string> _browsingTips = new()
         {
-            "🌐 Browsing Tip: Always check for 'https://' and the padlock icon 🔒 " +
-            "before entering any personal information on a website.",
-
-            "🌐 Browsing Tip: Avoid doing online banking on public Wi-Fi. " +
-            "Attackers can intercept your data on unsecured networks.",
-
-            "🌐 Browsing Tip: Be careful of pop-up ads claiming you've won a prize. " +
-            "These are almost always phishing attempts or malware installers.",
-
-            "🌐 Browsing Tip: Use a reputable ad-blocker extension in your browser — " +
-            "it also blocks many malicious ads that spread malware.",
-
-            "🌐 Browsing Tip: Regularly clear your browser cookies and cache. " +
-            "This reduces tracking and removes any stored malicious scripts."
+            "Browsing Tip: Always check for 'https://' and the padlock before entering personal info.",
+            "Browsing Tip: Avoid online banking on public Wi-Fi — attackers can intercept your data.",
+            "Browsing Tip: 'You have won a prize!' pop-ups are always scams.",
+            "Browsing Tip: Use an ad-blocker extension — it also blocks many malicious ads.",
+            "Browsing Tip: Clear your browser cookies regularly to reduce tracking."
         };
 
-        // ============================================================
-        // SINGLE RESPONSES (Dictionary for keyword lookup)
-        // ============================================================
-
-        private readonly Dictionary<string, string> _keywordResponses =
-            new(StringComparer.OrdinalIgnoreCase)
+        private readonly Dictionary<string, string> _responses = new(StringComparer.OrdinalIgnoreCase)
         {
-            { "hello",
-              "Hello! 👋 I'm your Cybersecurity Awareness Bot. " +
-              "Ask me anything about staying safe online, or click a topic button on the left!" },
-
-            { "hi",
-              "Hi there! Ready to learn about cybersecurity? " +
-              "Try asking about phishing, passwords, malware, or safe browsing." },
-
-            { "how are you",
-              "I'm running at full security capacity — all firewalls up! 😄 " +
-              "How can I help you stay safe online today?" },
-
-            { "what is your purpose",
-              "My purpose is to educate South African citizens about online threats " +
-              "like phishing, weak passwords, and malware — so you and your family " +
-              "can stay safer online." },
-
+            { "hello",               "Hello! Ask me about cybersecurity, or click a topic button on the left!" },
+            { "hi",                  "Hi there! Try asking about phishing, passwords, malware, or safe browsing." },
+            { "how are you",         "Running at full security capacity! How can I help you stay safe today?" },
+            { "what is your purpose","I educate South African citizens about online threats like phishing and malware." },
             { "help",
-              "Here are the topics I can help you with:\n\n" +
-              "• phishing / phishing tip\n" +
-              "• password / password tip\n" +
-              "• malware / malware tip\n" +
-              "• ransomware\n" +
-              "• safe browsing / browsing tip\n" +
-              "• social engineering\n" +
-              "• two factor / 2fa\n" +
-              "• scam / sars scam\n" +
-              "• south africa / cyber law / popia\n\n" +
-              "Or click the quick topic buttons on the left! " +
-              "You can also say 'tell me more' or 'give me another tip' to continue a topic." },
-
-            { "two factor",
-              "🔐 Two-Factor Authentication (2FA) adds a second layer of security.\n\n" +
-              "How it works:\n" +
-              "1. Enter your password (something you KNOW)\n" +
-              "2. Confirm with an OTP sent to your phone (something you HAVE)\n\n" +
-              "Even if someone steals your password, they cannot log in without your phone. " +
-              "Always enable 2FA on your bank, email, and social media accounts." },
-
-            { "2fa",
-              "2FA (Two-Factor Authentication) is one of the most effective ways to " +
-              "secure your accounts. Enable it on every account that offers it — " +
-              "especially banking and email." },
-
-            { "https",
-              "🔒 HTTPS means the connection between your browser and the website is encrypted.\n\n" +
-              "However — HTTPS does NOT mean the website is safe or legitimate! " +
-              "Scam websites can also have HTTPS. Always verify the domain name carefully " +
-              "before entering personal information." },
-
-            { "ransomware",
-              "💀 Ransomware encrypts all your files and demands payment to restore them.\n\n" +
-              "Protection tips:\n" +
-              "• Back up files regularly to an external drive or cloud\n" +
-              "• Never click suspicious email attachments\n" +
-              "• Keep Windows and software updated\n" +
-              "• Never pay the ransom — it doesn't guarantee your files back\n\n" +
-              "SA Businesses: Report attacks to cybersecurityhub.gov.za" },
-
-            { "virus",
-              "🦠 A computer virus attaches to files and spreads when shared. " +
-              "Keep Windows Defender enabled and your OS updated to stay protected." },
-
-            { "social engineering",
-              "🎭 Social engineering attacks exploit human psychology rather than technology.\n\n" +
-              "Common types:\n" +
-              "• Pretexting — fake scenarios to extract info\n" +
-              "• Vishing — phone calls pretending to be your bank or IT support\n" +
-              "• Baiting — leaving infected USB drives in public\n" +
-              "• Tailgating — following someone into a secure building\n\n" +
-              "Rule: Your bank will NEVER call and ask for your full PIN or password." },
-
-            { "south africa",
-              "🇿🇦 South Africa is among the top targeted countries for cybercrime in Africa.\n\n" +
-              "Key resources:\n" +
-              "• Cybersecurity Hub: cybersecurityhub.gov.za\n" +
-              "• Report online crime: www.saps.gov.za\n" +
-              "• The Cybercrimes Act (2020) criminalises hacking, ransomware and online fraud." },
-
-            { "sars scam",
-              "⚠️ SARS phishing scams are extremely common in South Africa.\n\n" +
-              "Remember:\n" +
-              "• SARS will NEVER ask for banking details via email or SMS\n" +
-              "• Always go directly to www.sars.gov.za — never via links in emails\n" +
-              "• Report phishing to: phishing@sars.gov.za" },
-
-            { "scam",
-              "🚨 Common online scams in South Africa:\n\n" +
-              "• Advance-fee fraud ('Send R500 to claim your R50,000 prize')\n" +
-              "• Fake job offers asking for documents or a registration fee\n" +
-              "• Romance scams on dating apps or Facebook\n" +
-              "• Online shopping fraud — paying for goods that never arrive\n\n" +
-              "Rule: If it sounds too good to be true — it is.\n" +
-              "Report scams at: cybersecurityhub.gov.za" },
-
-            { "cyber law",
-              "⚖️ South African Cyber Laws:\n\n" +
-              "• Cybercrimes Act (2020) — criminalises hacking, ransomware, cyberbullying\n" +
-              "• POPIA (2021) — companies must protect your personal data\n" +
-              "• ECT Act — governs electronic communications and transactions\n\n" +
-              "Report cybercrime to the SAPS or cybersecurityhub.gov.za" },
-
-            { "popia",
-              "📋 POPIA (Protection of Personal Information Act) — in full effect since 2021.\n\n" +
-              "Your rights:\n" +
-              "• Companies must collect only data they need\n" +
-              "• They must inform you if your data is breached\n" +
-              "• You can ask any company what data they hold about you\n" +
-              "• You can request your data be deleted" },
-
-            { "privacy",
-              "🔏 Protecting your privacy online:\n\n" +
-              "• Review your social media privacy settings regularly\n" +
-              "• Don't share your ID number, address or phone number publicly\n" +
-              "• Use a VPN on public Wi-Fi to encrypt your connection\n" +
-              "• Read app permissions — many apps request unnecessary access\n" +
-              "• Under POPIA, companies must protect your personal information." },
-
-            { "bye",      "Goodbye! Stay cyber-safe out there. Remember: think before you click! 🔐" },
-            { "exit",     "Take care! Keep your passwords strong and your guard up. 👋" },
-            { "thank",    "You're welcome! Stay safe online. 😊 Feel free to ask anything else." },
-            { "thanks",   "Happy to help! Cybersecurity awareness is the first step to staying safe. 🛡️" },
+              "Here is what I can do:\n\nChat: Ask about any cybersecurity topic\nTasks: Manage your cybersecurity to-do list\nQuiz: Test your cybersecurity knowledge\n\n" +
+              "Try typing: phishing | password | malware | safe browsing | social engineering | scam | cyber law\n" +
+              "Or try: add task | view tasks | start quiz | show activity log" },
+            { "two factor",          "2FA adds a second login step. Even if someone steals your password, they cannot get in without your phone. Enable it on banking and email!" },
+            { "2fa",                 "Enable 2FA on every account that offers it, especially banking and email." },
+            { "https",               "HTTPS encrypts your connection but does not mean the site is safe. Scam sites can also use HTTPS. Always check the domain name carefully." },
+            { "ransomware",          "Ransomware encrypts your files and demands payment. Protect yourself: back up files regularly, never click suspicious attachments, keep Windows updated." },
+            { "social engineering",  "Social engineering manipulates people psychologically. Your bank will NEVER call and ask for your full PIN or password." },
+            { "virus",               "Keep Windows Defender enabled and your OS updated to stay protected from viruses." },
+            { "south africa",        "SA is a top target for cybercrime in Africa. Report online crime at cybersecurityhub.gov.za or www.saps.gov.za." },
+            { "sars scam",           "SARS will NEVER ask for banking details via email or SMS. Go directly to www.sars.gov.za. Report phishing to phishing@sars.gov.za" },
+            { "scam",                "Common SA scams: advance-fee fraud, fake job offers, romance scams, fake online shopping. If it sounds too good to be true, it is!" },
+            { "cyber law",           "The Cybercrimes Act (2020) criminalises hacking, ransomware, and cyberbullying in SA. POPIA (2021) protects your personal data." },
+            { "popia",               "POPIA gives you the right to know what data companies hold about you and to request it be deleted." },
+            { "privacy",             "Review social media privacy settings, do not share your ID number publicly, and use a VPN on public Wi-Fi." },
+            { "thank",               "You are welcome! Stay safe online." },
+            { "thanks",              "Happy to help! Cybersecurity awareness is the first step to staying safe." },
+            { "bye",                 "Goodbye! Stay cyber-safe. Remember: think before you click!" },
         };
 
-        // ============================================================
-        // MAIN RESPONSE METHOD
-        // ============================================================
-
-        /// <summary>
-        /// Main method called by the UI. Takes the user's raw input,
-        /// detects intent and sentiment, builds the response, and
-        /// uses the ResponseProcessor delegate to apply any final transforms.
-        /// </summary>
         public string GetResponse(string input, ResponseProcessor? processor = null)
         {
             if (string.IsNullOrWhiteSpace(input))
-                return "It looks like you didn't type anything. " +
-                       "Please ask me a cybersecurity question or click a topic on the left!";
+                return "Please type a message or click a topic button!";
 
             string lower = input.ToLower().Trim();
-
-            // ── Update memory: increment message count ───────────────
             _memory.MessageCount++;
+            DetectInterest(lower);
 
-            // ── Detect and store interest from input ─────────────────
-            DetectAndStoreInterest(lower);
-
-            // ── Build the core response ──────────────────────────────
             string response = BuildResponse(lower);
 
-            // ── Apply the delegate processor if one was passed ───────
-            // This allows the caller (MainWindow) to inject sentiment
-            // prefix and memory prefix without the engine knowing about UI
             if (processor != null)
                 response = processor(response);
 
             return response;
         }
 
-        /// <summary>
-        /// Core response logic: checks for follow-up commands first,
-        /// then random tip requests, then keyword dictionary matches,
-        /// then falls back to a default message.
-        /// </summary>
         private string BuildResponse(string lower)
         {
-            // ── 1. Follow-up / conversation flow commands ────────────
-            if (IsFollowUp(lower))
-                return HandleFollowUp();
+            if (IsFollowUp(lower)) return HandleFollowUp();
 
-            // ── 2. Random tip requests ───────────────────────────────
-            if (lower.Contains("phishing tip") || lower.Contains("phishing advice"))
-                return GetRandom(_phishingTips);
+            if (lower.Contains("phishing tip"))  return GetRandom(_phishingTips);
+            if (lower.Contains("password tip"))  return GetRandom(_passwordTips);
+            if (lower.Contains("malware tip"))   return GetRandom(_malwareTips);
+            if (lower.Contains("browsing tip"))  return GetRandom(_browsingTips);
 
-            if (lower.Contains("password tip") || lower.Contains("password advice"))
-                return GetRandom(_passwordTips);
-
-            if (lower.Contains("malware tip") || lower.Contains("malware advice"))
-                return GetRandom(_malwareTips);
-
-            if (lower.Contains("browsing tip") || lower.Contains("safe browsing tip"))
-                return GetRandom(_safeBrowsingTips);
-
-            // ── 3. Keyword dictionary lookup ─────────────────────────
-            foreach (var key in _keywordResponses.Keys)
+            foreach (var key in _responses.Keys)
             {
                 if (lower.Contains(key))
                 {
-                    // Remember the last topic discussed
                     _memory.LastTopic = key;
-                    _memory.Remember("lastTopic", key);
-                    return _keywordResponses[key];
+                    return _responses[key];
                 }
             }
 
-            // ── 4. Topic keywords with random tip selection ──────────
-            if (lower.Contains("phishing"))
-            {
-                _memory.LastTopic = "phishing";
-                return GetRandom(_phishingTips);
-            }
+            if (lower.Contains("phishing")) { _memory.LastTopic = "phishing"; return GetRandom(_phishingTips); }
+            if (lower.Contains("password")) { _memory.LastTopic = "password"; return GetRandom(_passwordTips); }
+            if (lower.Contains("malware") || lower.Contains("virus")) { _memory.LastTopic = "malware"; return GetRandom(_malwareTips); }
+            if (lower.Contains("browsing") || lower.Contains("browse")) { _memory.LastTopic = "safe browsing"; return GetRandom(_browsingTips); }
 
-            if (lower.Contains("password"))
-            {
-                _memory.LastTopic = "password";
-                return GetRandom(_passwordTips);
-            }
-
-            if (lower.Contains("malware") || lower.Contains("virus"))
-            {
-                _memory.LastTopic = "malware";
-                return GetRandom(_malwareTips);
-            }
-
-            if (lower.Contains("browsing") || lower.Contains("browse"))
-            {
-                _memory.LastTopic = "safe browsing";
-                return GetRandom(_safeBrowsingTips);
-            }
-
-            // ── 5. Default fallback ──────────────────────────────────
-            return "I didn't quite understand that — could you rephrase? 🤔\n\n" +
-                   "Try asking about: phishing, passwords, malware, safe browsing, " +
-                   "social engineering, scams, or SA cyber law.\n" +
-                   "Or click one of the quick topic buttons on the left!";
+            return "I did not quite understand that. Try asking about phishing, passwords, malware, safe browsing, or type 'help'.";
         }
 
-        // ============================================================
-        // FOLLOW-UP / CONVERSATION FLOW
-        // ============================================================
-
-        /// <summary>
-        /// Returns true if the user's message is a follow-up request
-        /// like "tell me more", "give me another tip", "explain more".
-        /// </summary>
         public bool IsFollowUp(string lower)
         {
-            List<string> followUpPhrases = new()
-            {
-                "tell me more", "more info", "explain more", "more details",
-                "give me another", "another tip", "give me a tip",
-                "go on", "continue", "what else", "more please",
-                "elaborate", "expand on that", "keep going"
-            };
-
-            foreach (string phrase in followUpPhrases)
-            {
-                if (lower.Contains(phrase))
-                    return true;
-            }
+            string[] phrases = { "tell me more", "more info", "explain more", "give me another", "another tip", "go on", "continue", "what else", "more please" };
+            foreach (var p in phrases)
+                if (lower.Contains(p)) return true;
             return false;
         }
 
-        /// <summary>
-        /// Handles follow-up requests by giving another tip on the last topic.
-        /// </summary>
         private string HandleFollowUp()
         {
-            string lastTopic = _memory.LastTopic.ToLower();
-
-            if (lastTopic.Contains("phishing"))
-                return "Here's another phishing tip:\n\n" + GetRandom(_phishingTips);
-
-            if (lastTopic.Contains("password"))
-                return "Here's another password safety tip:\n\n" + GetRandom(_passwordTips);
-
-            if (lastTopic.Contains("malware") || lastTopic.Contains("virus"))
-                return "Here's another malware tip:\n\n" + GetRandom(_malwareTips);
-
-            if (lastTopic.Contains("browsing"))
-                return "Here's another safe browsing tip:\n\n" + GetRandom(_safeBrowsingTips);
-
-            // No last topic — give a general tip
-            return "Here's a general cybersecurity tip:\n\n" +
-                   GetRandom(_phishingTips) + "\n\n" +
-                   "Ask me about a specific topic for more detailed advice!";
+            string topic = _memory.LastTopic.ToLower();
+            if (topic.Contains("phishing")) return "Another phishing tip:\n\n" + GetRandom(_phishingTips);
+            if (topic.Contains("password")) return "Another password tip:\n\n" + GetRandom(_passwordTips);
+            if (topic.Contains("malware") || topic.Contains("virus")) return "Another malware tip:\n\n" + GetRandom(_malwareTips);
+            if (topic.Contains("browsing")) return "Another browsing tip:\n\n" + GetRandom(_browsingTips);
+            return "Here is a general tip:\n\n" + GetRandom(_phishingTips);
         }
 
-        // ============================================================
-        // INTEREST / MEMORY DETECTION
-        // ============================================================
-
-        /// <summary>
-        /// Scans the user's input for expressions of interest or concern
-        /// and stores them in the MemoryStore for personalised future replies.
-        /// </summary>
-        private void DetectAndStoreInterest(string lower)
+        private void DetectInterest(string lower)
         {
-            // Detect interest expressions like "I'm interested in privacy"
-            string[] interestPhrases = { "interested in", "care about", "want to learn about", "curious about" };
-            foreach (string phrase in interestPhrases)
+            foreach (var phrase in new[] { "interested in", "curious about", "care about" })
             {
                 if (lower.Contains(phrase))
                 {
-                    // Extract the topic after the phrase
                     int idx = lower.IndexOf(phrase) + phrase.Length;
-                    string topic = lower.Substring(idx).Trim().TrimEnd('.', '!', '?');
-                    if (!string.IsNullOrEmpty(topic))
+                    if (idx < lower.Length)
                     {
-                        _memory.Interest = topic;
-                        _memory.Remember("interest", topic);
+                        _memory.Interest = lower.Substring(idx).Trim().TrimEnd('.', '!', '?');
+                        _memory.Remember("interest", _memory.Interest);
                     }
                     return;
                 }
             }
-
-            // Detect concern expressions like "I'm worried about scams"
-            string[] concernPhrases = { "worried about", "concerned about", "scared of", "afraid of" };
-            foreach (string phrase in concernPhrases)
+            foreach (var phrase in new[] { "worried about", "concerned about", "scared of" })
             {
                 if (lower.Contains(phrase))
                 {
                     int idx = lower.IndexOf(phrase) + phrase.Length;
-                    string concern = lower.Substring(idx).Trim().TrimEnd('.', '!', '?');
-                    if (!string.IsNullOrEmpty(concern))
+                    if (idx < lower.Length)
                     {
-                        _memory.Concern = concern;
-                        _memory.Remember("concern", concern);
+                        _memory.Concern = lower.Substring(idx).Trim().TrimEnd('.', '!', '?');
+                        _memory.Remember("concern", _memory.Concern);
                     }
                     return;
                 }
             }
         }
 
-        // ============================================================
-        // HELPERS
-        // ============================================================
-
-        /// <summary>
-        /// Picks a random item from a List<string>.
-        /// This is the core of the "random responses" feature.
-        /// </summary>
-        private string GetRandom(List<string> options)
-        {
-            if (options == null || options.Count == 0)
-                return "I don't have a tip on that right now. Try asking something else!";
-
-            return options[_random.Next(options.Count)];
-        }
-
-        /// <summary>
-        /// Returns true if the input is an exit command.
-        /// </summary>
-        public bool IsExitCommand(string input)
-        {
-            return input.Equals("bye",  StringComparison.OrdinalIgnoreCase) ||
-                   input.Equals("exit", StringComparison.OrdinalIgnoreCase) ||
-                   input.Equals("quit", StringComparison.OrdinalIgnoreCase);
-        }
+        private string GetRandom(List<string> options) => options[_random.Next(options.Count)];
     }
 }
