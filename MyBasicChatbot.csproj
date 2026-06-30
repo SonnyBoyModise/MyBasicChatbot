@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- WPF application targeting Windows (required for SoundPlayer and WPF) -->
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
@@ -9,10 +8,14 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>MyBasicChatbot</RootNamespace>
     <AssemblyName>MyBasicChatbot</AssemblyName>
-    <ApplicationIcon>shield.ico</ApplicationIcon>
   </PropertyGroup>
 
-  <!-- Copy the WAV audio file to the output directory on every build -->
+  <!-- MySQL database connector NuGet package -->
+  <ItemGroup>
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
+  </ItemGroup>
+
+  <!-- Copy WAV file to output folder on every build -->
   <ItemGroup>
     <None Update="Audio\welcome.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
